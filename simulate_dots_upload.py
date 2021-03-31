@@ -156,11 +156,14 @@ def get_hex_from_img(img):
     return r.hex()
 
 def upload_local_image(img_file):
-    img = cv.imread(img_file)
+    img_bgr = cv.imread(img_file)
+    img = cv.cvtColor(img_bgr, cv.COLOR_BGR2RGB)
     img_hex = get_hex_from_img(img)
     return upload_image_hex(img_hex)
 
 clear()
-upload_local_image("PR_1_00018.bmp")
+set_brightness(7)
+upload_local_image("FlatPreloaders_PixelBuddha/FlatPreloaders/64x64/Preloader_7/Sprites/PR_7_00028.png")
+# upload_local_image("testing_images/testing_bmp/4dots.bmp")
 
 # upload_image_hex(build_image_hex(r_hex, g_hex, "0"*1024 * 5))
