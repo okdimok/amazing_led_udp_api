@@ -54,6 +54,12 @@ def get_json_payloads(json_file):
         payloads.append(udp_part["udp.payload"].replace(":", ""))
     return payloads
 
+def hexdump_json(json_file):
+    payloads = get_json_payloads(json_file)
+    s = ("\n".join(unwrap_payload(p) for p in payloads))
+    with open(json_file + "_hex.log", "w") as f:
+        f.write(s)
+
 def replay_json(json_file = "LED_Space_captures/upload_4dots_bmp.pcap.json"):
     for payload in get_json_payloads(json_file):
         snd_hex(payload)
@@ -105,20 +111,22 @@ def get_img_from_unwrapped(p):
     return p[58:]
 
 pp=[]
-def init_image_upload():
+def init_image_upload(img_num = 0):
     global pp
-    pp.append(enum_snd_hex("00c102080200000901010c01001c060300010003000d01001d09000000004000400000"))
-    pp.append(enum_snd_hex("00c1020901010c01000d01000e01001403010a00111000010007030501007800400040004000"))
+    img_num_hex = "%02x" % (img_num % (1<<8))
+    pp.append(enum_snd_hex("00c102080200" + img_num_hex + "0901010c01" + img_num_hex + "1c060300010003000d01001d09000000004000400000"))
+    pp.append(enum_snd_hex("00c1020901010c01" + img_num_hex + "0d01000e01001403010a00111000010007030501007800400040004000"))
 
-def wrap_image(p, i):
-    return "00c1020901010c01000d01000e0100120708" + "%04x" % (i%(1<<16))+ "00000400138200"+ ("04" if i < 7 else "02") + p
+def wrap_image(p, img_part_num, img_num = 0):
+    img_num_hex = "%02x" % (img_num % (1<<8))
+    return "00c1020901010c01" + img_num_hex + "0d01000e0100120708" + "%04x" % (img_part_num%(1<<16))+ "00000400138200"+ ("04" if img_part_num < 7 else "02") + p
 
-def upload_image_hex(p):
+def upload_image_hex(p, img_num=0):
     assert len(p) == 15*1024
-    init_image_upload()
+    init_image_upload(img_num)
     for i in range(7):
-        pp.append(enum_snd_hex(wrap_image(p[2048*i:(i+1)*2048], i)))
-    pp.append(enum_snd_hex(wrap_image(p[-1024:], 7)))
+        pp.append(enum_snd_hex(wrap_image(p[2048*i:(i+1)*2048], i, img_num)))
+    pp.append(enum_snd_hex(wrap_image(p[-1024:], 7, img_num)))
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.settimeout(1.0)
@@ -155,18 +163,21 @@ def get_hex_from_img(img):
             r += v
     return r.hex()
 
-def upload_local_image(img_file):
+def upload_local_image(img_file, img_num=0):
     img = cv.imread(img_file)
     # height, width = img.shape[:2]
     img = cv.resize(img, (64, 64), interpolation = cv.INTER_AREA)
     img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
     img_hex = get_hex_from_img(img)
-    return upload_image_hex(img_hex)
+    return upload_image_hex(img_hex, img_num)
 
 clear()
-set_brightness(16)
-# upload_local_image("FlatPreloaders_PixelBuddha/FlatPreloaders/64x64/Preloader_7/Sprites/PR_7_00028.png")
-upload_local_image("testing_images/testing_png/pattern_1.png")
+# set_brightness(16)
+# upload_local_image("FlatPreloaders_PixelBuddha/FlatPreloaders/64x64/Preloader_7/Sprites/PR_7_00012.png")
+# upload_local_image("testing_images/testing_png/pattern_1.png", 1)
+# upload_local_image("testing_images/testing_png/pattern_1.png", 2)
 
 # img = np.ones((64,64,3), dtype=np.uint8) * 10
 # upload_image_hex()
+
+# hexdump_json("LED_Space_captures/upload_green_gif_upload_red_gif.pcap.json")
