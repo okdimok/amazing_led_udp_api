@@ -24,7 +24,7 @@ def snd_bytes(msg):
 def snd_hex(msg):
     return snd_bytes(bytes.fromhex(msg))
 
-_current_packet = 5
+_current_packet = 3
 def enum_snd_hex(msg):
     global _current_packet
     _current_packet += 1
@@ -39,7 +39,7 @@ def clear():
         snd_bytes(clr.read())
 
 def set_brightness(i):
-    p = "03 00 C1 02 06 02 00".replace(" ", "")
+    p = "02 00 C1 02 06 02 00".replace(" ", "")
     p += "%02x" % i
     snd_hex(wrap_payload(p))
 
@@ -156,14 +156,17 @@ def get_hex_from_img(img):
     return r.hex()
 
 def upload_local_image(img_file):
-    img_bgr = cv.imread(img_file)
-    img = cv.cvtColor(img_bgr, cv.COLOR_BGR2RGB)
+    img = cv.imread(img_file)
+    # height, width = img.shape[:2]
+    img = cv.resize(img, (64, 64), interpolation = cv.INTER_AREA)
+    img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
     img_hex = get_hex_from_img(img)
     return upload_image_hex(img_hex)
 
 clear()
-set_brightness(7)
-upload_local_image("FlatPreloaders_PixelBuddha/FlatPreloaders/64x64/Preloader_7/Sprites/PR_7_00028.png")
-# upload_local_image("testing_images/testing_bmp/4dots.bmp")
+set_brightness(16)
+# upload_local_image("FlatPreloaders_PixelBuddha/FlatPreloaders/64x64/Preloader_7/Sprites/PR_7_00028.png")
+upload_local_image("testing_images/testing_png/pattern_1.png")
 
-# upload_image_hex(build_image_hex(r_hex, g_hex, "0"*1024 * 5))
+# img = np.ones((64,64,3), dtype=np.uint8) * 10
+# upload_image_hex()
