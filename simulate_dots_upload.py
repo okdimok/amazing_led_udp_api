@@ -143,89 +143,24 @@ def get_hex_of_uniform_color_from_bits(color = "10000"): # from most significant
 
 
 def get_hex_from_img(img):
-    assert img.shape[0] == 3 and img.shape[1] == 64 and img.shape[2] == 64
+    assert img.shape[0] == 64 and img.shape[1] == 64 and img.shape[2] == 3
     r = b""
     for b in range(5): # the bits from most significant to least significant
         for c in range(3):
             bits = np.zeros((64,64), dtype=np.bool8)
             for x in range(64): # the swipe over all the 64x64 pixels 
                 for y in range(64):
-                    bits[x,y]=(img[c, x, y] & (1<<(7-b)))
-            v = np.packbits(bits).tobytes()
+                    bits[x,y]=(img[x, y, c] & (1<<(7-b)))
+            v = np.packbits(bits, bitorder="little").tobytes()
             r += v
     return r.hex()
 
 def upload_local_image(img_file):
-    
-
-# clear()
-# r_hex = get_hex_of_uniform_color_from_bits("00000")
-# g_hex = ""
-# g_hex += "1"*(1024//16//4//2)
-# g_hex = g_hex.ljust(1024, "0")
-# g_hex = g_hex.ljust(5*1024, "0")
-
-img = np.concatenate((
-    100 * np.ones((1, 64, 64), dtype=np.int8),
-    0 * np.ones((1, 64, 64), dtype=np.int8),
-    10 * np.ones((1, 64, 64), dtype=np.int8)
-))
-
+    img = cv.imread(img_file)
+    img_hex = get_hex_from_img(img)
+    return upload_image_hex(img_hex)
 
 clear()
-img_hex = get_hex_from_img(img)
-upload_image_hex(img_hex)
+upload_local_image("PR_1_00018.bmp")
 
 # upload_image_hex(build_image_hex(r_hex, g_hex, "0"*1024 * 5))
-
-
-
-
-
-
-
-# clear()
-# json_file = "LED_Space_captures/upload_green_gif.pcap.json"
-# json_file = "LED_Space_captures/upload_red_gif.pcap.json"
-# json_file = "LED_Space_captures/upload_r57g0b0_gif.pcap.json"
-
-# payloads = get_json_payloads(json_file)
-# s = ("\n".join(get_img_from_unwrapped(unwrap_payload(p)) for p in payloads))
-s = ("\n".join(unwrap_payload(p) for p in pp))
-
-# for p in payloads:
-#     print(len(get_img_from_unwrapped(unwrap_payload(p))))
-with open("sending_zeroes_hex.log", "w") as f:
-    f.write(s)
-# print(s)
-# clear()
-# replay_json(json_file)
-
-# set_brightness(16)
-# clear()
-
-# def send_modified_payload(modify=(5,6)):
-#     payloads = get_json_payloads("LED_Space_captures/upload_4dots_bmp.pcap.json")
-#     for i, payload in enumerate(payloads):
-#         assert check_payload(payload)
-#         # print(unwrap_payload(payload))
-#         if len(payload) < 1000:
-#             snd_hex(payload)
-#         else:
-#             p = unwrap_payload(payload)
-#             n=16
-#             # p = p[:-n]+"f"*n
-#             if i in modify:
-#                 p = p.replace("000000000000", "100040000000")
-#             p = wrap_payload(p)
-#             assert check_payload(p)
-#             snd_hex(p)
-
-# for i in range(10):
-#     send_modified_payload((i,))
-
-# df = pd.read_csv("LED_Space_captures/upload_4dots_png.csv")
-# for i, m in df.iterrows():
-#     print(m.Data)
-#     snd(m.Data)
-
